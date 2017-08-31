@@ -19,7 +19,7 @@ typedef enum { END_OF_FILE = 0,
     EQUAL, COLON, COMMA, SEMICOLON,
     LBRAC, RBRAC, LPAREN, RPAREN,
     NOTEQUAL, GREATER, LESS, LTEQ, GTEQ,
-    DOT, NUM, ID, ERROR // TODO: Add labels for new token types here
+    DOT, NUM, ID, ERROR, REALNUM, BASE08NUM, BASE16NUM
 } TokenType;
 
 class Token {
@@ -43,6 +43,11 @@ class LexicalAnalyzer {
     Token tmp;
     InputBuffer input;
 
+    std::string ScanNumIfPossible();
+    std::string ScanBase08NumIfPossible();
+    std::string ScanBase16NumIfPossible();
+    std::string ScanRealNumIfPossible();
+    bool MatchSequence(std::string);
     bool SkipSpace();
     bool IsKeyword(std::string);
     TokenType FindKeywordIndex(std::string);

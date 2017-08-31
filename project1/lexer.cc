@@ -20,11 +20,55 @@ string reserved[] = { "END_OF_FILE",
     "EQUAL", "COLON", "COMMA", "SEMICOLON",
     "LBRAC", "RBRAC", "LPAREN", "RPAREN",
     "NOTEQUAL", "GREATER", "LESS", "LTEQ", "GTEQ",
-    "DOT", "NUM", "ID", "ERROR" // TODO: Add labels for new token types here (as string)
+    "DOT", "NUM", "ID", "ERROR", "REALNUM", "BASE08NUM", "BASE16NUM"
 };
 
 #define KEYWORDS_COUNT 5
 string keyword[] = { "IF", "WHILE", "DO", "THEN", "PRINT" };
+
+
+bool LexicalAnalyzer::MatchSequence(string s) 
+{
+    char c;
+
+    for (int i = 0; i < s.length(); i++) {
+        input.GetChar(c);
+        if (input.EndOfInput() || c != s[i]) {
+            if (!input.EndOfInput()) {
+                input.UngetChar(c);
+            }
+            for (int j = 0; j < i; j++) {
+                input.UngetChar(s[i-j-1]);
+            }
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ispdigit(char c) {
+    return c >= '1' && c <= '9';
+}
+
+bool ispdigit8(char c) {
+    return c >= '1' && c <= '7';
+}
+
+bool ispdigit16(char c) {
+    return (c >= '1' && c <= '9') || (c >= 'A' && c <= 'F');
+}
+
+bool isdigit(char c) {
+    return c == '0' || ispdigit(c);
+}
+
+bool isdigit8(char c) {
+    return c == '0' || ispdigit8(c);
+}
+
+bool isdigit16(char c) {
+    return c == '0' || ispdigit16(c);
+}
 
 void Token::Print()
 {
@@ -81,38 +125,417 @@ TokenType LexicalAnalyzer::FindKeywordIndex(string s)
     return ERROR;
 }
 
-Token LexicalAnalyzer::ScanNumber()
+// Token LexicalAnalyzer::ScanNumber()
+// {
+//     char c;
+
+//     input.GetChar(c);
+//     if (isdigit(c)) {
+//         if (c == '0') {
+//             tmp.lexeme = "0";
+//         } else {
+//             tmp.lexeme = "";
+//             while (!input.EndOfInput() && isdigit(c)) {
+//                 tmp.lexeme += c;
+//                 input.GetChar(c);
+//             }
+//             if (!input.EndOfInput()) {
+//                 input.UngetChar(c);
+//             }
+//         }
+//         // TODO: You can check for REALNUM, BASE08NUM and BASE16NUM here!
+//         tmp.token_type = NUM;
+//         tmp.line_no = line_no;
+//         return tmp;
+//     } else {
+//         if (!input.EndOfInput()) {
+//             input.UngetChar(c);
+//         }
+//         tmp.lexeme = "";
+//         tmp.token_type = ERROR;
+//         tmp.line_no = line_no;
+//         return tmp;
+//     }
+// }
+
+// Token LexicalAnalyzer::ScanNumber() 
+// {
+//     char c;
+
+//     input.GetChar(c);
+//     if (isdigit(c)) {
+//         if (c == '0') {
+//             tmp.lexeme = "0";
+//             if (!input.EndOfInput()) {
+//                 input.GetChar(c);
+//                 if (c == '.') { // DOT
+//                     tmp.lexeme += '.'; 
+//                     input.GetChar(c);
+//                     while (!input.EndOfInput() && c == '0') {
+//                         tmp.lexeme += c;
+//                         input.GetChar(c);
+//                     }
+//                     if (isdigit(c) && c != '0') {
+//                         tmp.lexeme += c;
+//                         input.GetChar(c);
+//                         while(!input.EndOfInput() && isdigit(c)) {
+//                             tmp.lexeme += c;
+//                             input.GetChar(c);
+//                         }
+//                         if (!input.EndOfInput()) {
+//                             input.UngetChar(c);
+//                         }
+//                         tmp.token_type = REALNUM;
+//                         tmp.line_no = line_no;
+//                         return tmp;
+//                     } else {
+//                         if (!input.EndOfInput()) {
+//                             input.UngetChar(c);
+//                         }
+//                         for (int i = 0; i < tmp.lexeme.length() - 2; i++) {
+//                             input.UngetChar('0');
+//                         }
+//                         input.UngetChar('.');
+//                         tmp.lexeme = "0";
+//                         tmp.token_type = NUM;
+//                         tmp.line_no = line_no;
+//                         return tmp;
+//                     }
+//                 } else if (MatchSequence("x16")) { // Base 16
+//                     tmp.lexeme += "x16";
+//                     tmp.token_type = BASE16NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 } else if (MatchSequence("x08")) { // Base 8
+//                     tmp.lexeme += "x08";
+//                     tmp.token_type = BASE08NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 }
+//                 input.UngetChar(c);
+//             }
+//             tmp.token_type = NUM;
+//             tmp.line_no = line_no;
+//             return tmp;
+//         } else {
+//             if (isdigit8(c)) {
+//                 while (!input.EndOfInput() && isdigit8(c)) {
+//                     tmp.lexeme += c;
+//                     input.GetChar(c);
+//                 }
+//                 if (input.EndOfInput()) {
+//                     tmp.token_type = NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 } else {
+//                     input.UngetChar(c);
+//                 } 
+//                 if (MatchSequence("x08")) {
+//                     tmp.lexeme += "x08";
+//                     tmp.token_type = BASE08NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 } else if (MatchSequence("x16")) {
+//                     tmp.lexeme += "x16";
+//                     tmp.token_type = BASE16NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 }
+//                 input.GetChar(c);            
+//             }
+//             if (c == '.') {
+//                 // DOT 
+//                 string real = ".";
+//                 input.GetChar(c);
+//                 while(!input.EndOfInput() && isdigit(c)) {
+//                     real += c;
+//                     input.GetChar(c);
+//                 }
+//                 if (!input.EndOfInput()) {
+//                     input.UngetChar(c);
+//                 }
+//                 if (real.length() > 1) {
+//                     tmp.lexeme += real;
+//                     tmp.token_type = REALNUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 } else {
+//                     input.UngetString(real);
+//                     tmp.token_type = NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 }
+//             }
+//             if (isdigit(c)) {
+//                 tmp.lexeme += c;
+//                 input.GetChar(c);
+//                 while (!input.EndOfInput() && isdigit(c)) {
+//                     tmp.lexeme += c;
+//                     input.GetChar(c);
+//                 }
+//                 if (!input.EndOfInput()) {
+//                     input.UngetChar(c);
+//                 }
+//                 if (MatchSequence("x16")) {
+//                     tmp.lexeme += "x16";
+//                     tmp.token_type = BASE16NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 }
+//                 input.GetChar(c);
+//                 if (c == '.') {
+//                     // DOT 
+//                     string real = ".";
+//                     input.GetChar(c);
+//                     while(!input.EndOfInput() && isdigit(c)) {
+//                         real += c;
+//                         input.GetChar(c);
+//                     }
+//                     if (!input.EndOfInput()) {
+//                         input.UngetChar(c);
+//                     }
+//                     if (real.length() > 1) {
+//                         tmp.lexeme += real;
+//                         tmp.token_type = REALNUM;
+//                         tmp.line_no = line_no;
+//                         return tmp;
+//                     } else {
+//                         input.UngetString(real);
+//                         tmp.token_type = NUM;
+//                         tmp.line_no = line_no;
+//                         return tmp;
+//                     }
+//                 }
+//             }
+//             if (isdigit16(c)) {
+//                 tmp.lexeme += c;
+//                 input.GetChar(c);
+//                 while(!input.EndOfInput() && isdigit16(c)) {
+//                     tmp.lexeme += c;
+//                     input.GetChar(c);
+//                 }
+//                 if (!input.EndOfInput()) {
+//                     input.UngetChar(c);
+//                 }
+//                 if (MatchSequence("x16")) {
+//                     tmp.lexeme += "x16";
+//                     tmp.token_type = BASE16NUM;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 } else {
+//                     // tmp.lexeme = "";
+//                     tmp.token_type = ERROR;
+//                     tmp.line_no = line_no;
+//                     return tmp;
+//                 }
+//             }
+//             // if we get here then we have a valid number so far
+//             // but we saw a character that doesn't fit into any number type
+//             input.UngetChar(c);
+
+//             tmp.token_type = NUM;
+//             tmp.line_no = line_no;
+//             return tmp;
+//         }
+//     } else {
+//         if (!input.EndOfInput()) {
+//             input.UngetChar(c);
+//         }
+//         tmp.lexeme = "";
+//         tmp.token_type = ERROR;
+//         tmp.line_no = line_no;
+//         return tmp;
+//     }
+
+//     tmp.lexeme = "";
+//     tmp.token_type = ERROR;
+//     tmp.line_no = line_no;
+//     return tmp;
+// }
+
+Token LexicalAnalyzer::ScanNumber() 
+{
+    string lex;
+
+    lex = ScanRealNumIfPossible();
+    if (lex.length() > 0) {
+        tmp.lexeme = lex;
+        tmp.token_type = REALNUM;
+        tmp.line_no = line_no;
+        return tmp;
+    }
+    lex = ScanBase08NumIfPossible();
+    if (lex.length() > 0) {
+        tmp.lexeme = lex;
+        tmp.token_type = BASE08NUM;
+        tmp.line_no = line_no;
+        return tmp;
+    }
+    lex = ScanBase16NumIfPossible();
+    if (lex.length() > 0) {
+        tmp.lexeme = lex; 
+        tmp.token_type = BASE16NUM;
+        tmp.line_no = line_no;
+        return tmp;
+    }
+    lex = ScanNumIfPossible();
+    if (lex.length() > 0) {
+        tmp.lexeme = lex;
+        tmp.token_type = NUM;
+        tmp.line_no = line_no;
+        return tmp;
+    }
+
+    tmp.lexeme = "";
+    tmp.token_type = ERROR;
+    tmp.line_no = line_no;
+    return tmp;
+}
+
+string LexicalAnalyzer::ScanNumIfPossible()
 {
     char c;
+    string scanned = "";
 
     input.GetChar(c);
+    scanned += c;
     if (isdigit(c)) {
         if (c == '0') {
-            tmp.lexeme = "0";
+            return scanned;
         } else {
-            tmp.lexeme = "";
+            input.GetChar(c);
             while (!input.EndOfInput() && isdigit(c)) {
-                tmp.lexeme += c;
+                scanned += c;
                 input.GetChar(c);
             }
             if (!input.EndOfInput()) {
                 input.UngetChar(c);
             }
+            return scanned;
         }
-        // TODO: You can check for REALNUM, BASE08NUM and BASE16NUM here!
-        tmp.token_type = NUM;
-        tmp.line_no = line_no;
-        return tmp;
-    } else {
+    } 
+    input.UngetString(scanned);
+    return "";
+}
+
+string LexicalAnalyzer::ScanRealNumIfPossible() 
+{
+    char c;
+    bool pdigit_scanned_digit_after_dot = false;
+    string scanned = "";
+    input.GetChar(c);
+    scanned += c;
+    if (c == '0') {
+        if (MatchSequence(".")) {
+            scanned += '.';
+            input.GetChar(c);
+            while(!input.EndOfInput() && c == '0') {
+                scanned += c;
+                input.GetChar(c);
+            }
+            if (!input.EndOfInput() && ispdigit(c)) {
+                while(!input.EndOfInput() && isdigit(c)) {
+                    scanned += c; 
+                    input.GetChar(c);
+                }
+                if (!input.EndOfInput()) {
+                    input.UngetChar(c);
+                }
+                return scanned;
+            }
+        }
+    } else if (ispdigit(c)) {
+        input.GetChar(c);
+        while(!input.EndOfInput() && isdigit(c)) {
+            scanned += c;
+            input.GetChar(c);
+        }
         if (!input.EndOfInput()) {
             input.UngetChar(c);
         }
-        tmp.lexeme = "";
-        tmp.token_type = ERROR;
-        tmp.line_no = line_no;
-        return tmp;
+        if (MatchSequence(".")) {
+            scanned += '.';
+            pdigit_scanned_digit_after_dot = false;
+            input.GetChar(c);
+            while (!input.EndOfInput() && isdigit(c)) {
+                pdigit_scanned_digit_after_dot = true;
+                scanned += c;
+                input.GetChar(c);
+            }
+            if (!input.EndOfInput()) {
+                input.UngetChar(c);
+            }
+            if (pdigit_scanned_digit_after_dot) {
+                return scanned;
+            }
+        }
     }
+    input.UngetString(scanned);
+    return "";
 }
+
+// returns the lexeme of the longest base16num that exists or empty string 
+// if the next token cannot be a base16num
+string LexicalAnalyzer::ScanBase16NumIfPossible()
+{
+    char c; 
+    string scanned = "";
+    input.GetChar(c);
+    scanned += c;   
+    if (c == '0') {
+        if (MatchSequence("x16")) {
+            scanned += "x16";
+            return scanned;
+        }
+    } else if (ispdigit16(c)) {
+        input.GetChar(c);
+        while (!input.EndOfInput() && isdigit16(c)) {
+            scanned += c;
+            input.GetChar(c);
+        }
+        if (!input.EndOfInput()) {
+            input.UngetChar(c);
+        }
+        if (MatchSequence("x16")) {
+            scanned += "x16";
+            return scanned;
+        }
+    }
+    input.UngetString(scanned);
+    return "";
+}
+
+// Returns the lexeme of the base08num to scan or empty string if 
+// there is not a valid base08num
+string LexicalAnalyzer::ScanBase08NumIfPossible() 
+{
+    char c;
+    string scanned = "";
+    input.GetChar(c);
+    scanned += c;
+    if (c == '0') {
+        if (MatchSequence("x08")) {
+            scanned += "x08";
+            return scanned; 
+        }
+    } else if (ispdigit8(c)) {
+        input.GetChar(c);
+        while(!input.EndOfInput() && isdigit8(c)) {
+            scanned += c;
+            input.GetChar(c);
+        }
+        if (!input.EndOfInput()) {
+            input.UngetChar(c);
+        }
+        if (MatchSequence("x08")) {
+            scanned += "x08";
+            return scanned;
+        }
+    }
+    input.UngetString(scanned);
+    return "";
+}
+
 
 Token LexicalAnalyzer::ScanIdOrKeyword()
 {
