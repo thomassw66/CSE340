@@ -1,0 +1,12 @@
+hello -> world
+hello -> a b
+hello -> c1 c2
+world -> w world
+world -> #
+a -> x a y
+a -> z
+b -> x y z
+c1 -> y c1
+c1 -> y
+c2 -> w c2 z
+c2 -> #

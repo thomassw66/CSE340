@@ -1,0 +1,3 @@
+FIRST(S) = { a, z }
+FIRST(A) = { b }
+FIRST(B) = { d }

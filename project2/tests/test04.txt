@@ -1,0 +1,24 @@
+X -> Y Z #
+X -> F Q P z #
+Y -> U B i S O F T #
+Z -> W W #
+A -> B C Q q r #
+B -> C U P #
+C -> S T O R E #
+C -> k C #
+U -> V W #
+V -> W #
+W -> X #
+D -> R E A D #
+E -> H j #
+F -> F A I R #
+R -> A R A R A t #
+S -> Y X A #
+T -> S D d #
+G -> H Q #
+H -> I R I B #
+I -> A B C D E F G H I j k l m n O P Q R S T U V W X Y Z #
+O -> Z Y X W V U T S R Q P O n m l k j I H G F E D C B A #
+P -> I R Q #
+Q -> C S E #
+##

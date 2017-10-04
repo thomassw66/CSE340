@@ -1,0 +1,14 @@
+A -> a B G C a #
+A -> #
+B -> A C G C b #
+B -> #
+C -> c C x #
+C -> #
+D -> F G G F #
+D -> #
+E -> A A A A A A D D D D D D G G G G G F E B B B B C C C A A A #
+E -> #
+F -> f a a #
+G -> g G G G z #
+G -> #
+##

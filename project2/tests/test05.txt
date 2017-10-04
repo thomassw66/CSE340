@@ -1,0 +1,15 @@
+S -> A B e F D #
+S -> B C d E F #
+A -> A a B #
+A -> A A b B #
+A -> #
+B -> C A #
+B -> c a a a a C b b b b A #
+C -> #
+C -> C c C #
+C -> E B #
+D -> E F #
+E -> F E #
+F -> D z D #
+F -> C C #
+##

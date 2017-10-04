@@ -1,0 +1,6 @@
+FIRST(hello) = { #, w, x, y, z }
+FIRST(world) = { #, w }
+FIRST(a) = { x, z }
+FIRST(b) = { x }
+FIRST(c1) = { w, y }
+FIRST(c2) = { #, w }

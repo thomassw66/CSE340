@@ -1,0 +1,4 @@
+decl -> idList colon ID
+idList -> ID idList1
+idList1 -> #
+idList1 -> COMMA ID idList1

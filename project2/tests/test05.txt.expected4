@@ -1,0 +1,7 @@
+FOLLOW(S) = { $ }
+FOLLOW(A) = { $, e, d, a, b, c, z }
+FOLLOW(B) = { $, e, d, a, b, c, z }
+FOLLOW(F) = { $, c, z }
+FOLLOW(D) = { $, c, z }
+FOLLOW(C) = { $, e, d, a, b, c, z }
+FOLLOW(E) = { $, e, d, a, b, c, z }
