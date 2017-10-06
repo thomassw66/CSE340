@@ -1,58 +1,6 @@
-#include <iostream>
-#include <vector>
-#include <map>
-#include <set>
+#include "grammar.h"
 
 using namespace std;
-
-typedef string ID;
-
-struct Rule {
-	ID lhs;
-	vector<ID> rhs;
-};
-
-struct ID_Info {
-	bool is_terminal;
-	bool is_generating;
-	bool is_reachable;
-	ID id;
-	int order;
-};
-
-struct ID_Info_Key {
-	inline bool operator() (const ID_Info& info1, const ID_Info& info2) {
-		return (info1.order < info2.order);
-	}
-};
-
-class Grammar {
-public:
-	void ListFirstSet();
-	void ListFollowSet();
-	void GetUsefulRules();
-	bool HasPredictiveParser();
-	void ListTerminals();
-	void ListNonTerminals();
-	Grammar();
-private:
-	// implementation specific details 
-	map<ID, vector<Rule > > rule_list;
-	map<ID, ID_Info> universe;
-	map<ID, set<ID> > first;
-	map<ID, set<ID> > follow;
-	// vector<ID> universe;
-	void AddRule(Rule r);
-	void AddID(ID id, bool is_terminal);
-	void UpdateID(ID id, bool is_terminal);
-	void calculate_reachable_symbols();
-	void calculate_generating_symbols();
-	void calculate_first_sets();
-	void calculate_follow_sets();
-	void set_reachable(ID id);
-	int id_counter;
-	ID start_symbol;
-};
 
 void print_rule(Rule r)
 {
@@ -73,67 +21,17 @@ Rule make_rule(ID lhs, ID * rhs, int size)
 	return r;
 }
 
-Grammar::Grammar() {
+Grammar::Grammar(vector<Rule> rule_list) {
 	id_counter = 0; 
-	// Generate a list of rules in here for now 
-	ID rlst1[] = {"idList", "colon", "ID"};
-	Rule rule1 = make_rule("decl", rlst1, 3);
+	start_symbol = "NONE_YET";
 
-	ID rlst2[] = {"ID", "idList1"};
-	Rule rule2 = make_rule("idList", rlst2, 2);
-
-	ID rlst3[] = {"#"};
-	Rule rule3 = make_rule("idList1", rlst3, 1);
-
-	ID rlst4[] = {"COMMA", "ID", "idList1"};
-	Rule rule4 = make_rule("idList1", rlst4, 3);
-
-	AddRule(rule1);
-	AddRule(rule2);
-	AddRule(rule3);
-	AddRule(rule4);
-
-	// ID rlst1[] = {"A", "B"};
-	// Rule r1 = make_rule("S", rlst1, 2);
-
-	// ID rlst2[] = {"C"};
-	// Rule r2 = make_rule("S", rlst2, 1);
-
-	// ID rlst3[] = {"c"};
-	// Rule r3 = make_rule("C", rlst3, 1);
-
-	// ID rlst4[] = {"a"};
-	// Rule r4 = make_rule("S", rlst4, 1);
-
-	// ID rlst5[] = {"a", "A"};
-	// Rule r5 = make_rule("A", rlst5, 2);
-
-	// ID rlst6[] = {"b"};
-	// Rule r6 = make_rule("B", rlst6, 1);
-
-	// AddRule(r1);
-	// AddRule(r2);
-	// AddRule(r3);
-	// AddRule(r4);
-	// AddRule(r5);
-	// AddRule(r6);
+	for (Rule r : rule_list)
+		AddRule(r);
 
 	calculate_generating_symbols();
 	calculate_reachable_symbols();
 	calculate_first_sets();
 	calculate_follow_sets();
-	// rule_list[rule1.lhs].push_back(rule1);
-	// for (int i = 0; i < rule_list["id1"][0].rhs.size(); i++) {
-	// 	cout << rule_list[rule1.lhs][0].rhs[i] << endl;
-	// }
-	// for (map<ID, vector<Rule> >::iterator rl_it = rule_list.begin(); rl_it != rule_list.end(); rl_it++){
-	// 	ID lhs = rl_it->first;
-	// 	vector<Rule> rlist = rl_it->second;
-	// 	for (vector<Rule>::iterator rule_it = rlist.begin(); rule_it != rlist.end(); rule_it++){
-	// 		Rule r = *rule_it;
-	// 		print_rule(r);
-	// 	}
-	// }
 }
 
 // precondition we have added all of the rules to our rule list
@@ -186,7 +84,9 @@ void Grammar::calculate_reachable_symbols(){
 
 void Grammar::set_reachable(ID id)
 {
-	universe[id].is_reachable = true;
+	if (universe.find(id) == universe.end()) return;
+
+ 	universe[id].is_reachable = true;
 	if (universe[id].is_generating == false) return;
 
 	for (int i = 0; i < rule_list[id].size(); i++) {
@@ -311,6 +211,7 @@ void Grammar::calculate_follow_sets()
 		set<ID> s;
 		follow[id] = s;
 	}
+	if (universe.find(start_symbol) == universe.end()) return;
 	follow[start_symbol].insert("$");
 	bool changed_flag = true;
 	while (changed_flag) {
@@ -415,7 +316,8 @@ void Grammar::ListNonTerminals()
 
 int main()
 {
-	Grammar g;
+	vector<Rule> v;
+	Grammar g (v);
 	g.ListFirstSet();
 	g.ListFollowSet();
 }
