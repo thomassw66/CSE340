@@ -3,23 +3,30 @@
 #include <map>
 #include <set>
 
-typedef std::string ID;
+typedef std::string Symbol;
 
 struct Rule {
-	ID lhs;
-	std::vector<ID> rhs;
-};
-
-struct ID_Info {
-	bool is_terminal;
-	bool is_generating;
-	bool is_reachable;
-	ID id;
+	Symbol lhs;
+	std::vector<Symbol> rhs;
 	int order;
 };
 
-struct ID_Info_Key {
-	inline bool operator() (const ID_Info& info1, const ID_Info& info2) {
+struct Symbol_Info {
+	bool is_terminal;
+	bool is_generating;
+	bool is_reachable;
+	Symbol id;
+	int order;
+};
+
+struct Rule_Key {
+	inline bool operator() (const Rule& rule1, const Rule& rule2) {
+		return (rule1.order < rule2.order);
+	}
+};
+
+struct Symbol_Info_Key {
+	inline bool operator() (const Symbol_Info& info1, const Symbol_Info& info2) {
 		return (info1.order < info2.order);
 	}
 };
@@ -35,19 +42,22 @@ public:
 	Grammar(std::vector<Rule> rule_list);
 private:
 	// implementation specific details 
-	std::map<ID, std::vector<Rule > > rule_list;
-	std::map<ID, ID_Info> universe;
-	std::map<ID, std::set<ID> > first;
-	std::map<ID, std::set<ID> > follow;
-	// vector<ID> universe;
+	std::map<Symbol, std::vector<Rule > > rule_list;
+	std::map<Symbol, Symbol_Info> universe;
+	std::map<Symbol, std::set<Symbol> > first;
+	std::map<Symbol, std::set<Symbol> > follow;
+	// vector<Symbol> universe;
 	void AddRule(Rule r);
-	void AddID(ID id, bool is_terminal);
-	void UpdateID(ID id, bool is_terminal);
+	void AddSymbol(Symbol id, bool is_terminal);
+	void UpdateSymbol(Symbol id, bool is_terminal);
 	void calculate_reachable_symbols();
 	void calculate_generating_symbols();
 	void calculate_first_sets();
 	void calculate_follow_sets();
-	void set_reachable(ID id);
+	void set_reachable(Symbol id);
 	int id_counter;
-	ID start_symbol;
+	int rule_counter;
+	Symbol start_symbol;
 };
+
+void print_rule(Rule r);
