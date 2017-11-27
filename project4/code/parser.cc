@@ -39,6 +39,8 @@ void parse_case();
 void parse_default_case();
 void error(string message);
 void syntax_error();
+ValueNode* get_value_node(string id);
+ValueNode* get_value_node(int constant);
 Token match(TokenType type);
 Token peek();
 
@@ -100,7 +102,21 @@ bool is_op(TokenType type)
 	return type == PLUS || type == MINUS || type == MULT || type == DIV;
 }
 
-struct StatementNode* parse_assign_stmt() 
+ValueNode* get_value_node(string id)
+{
+	// should try not faking it
+	return NULL;
+}
+
+ValueNode* get_value_node(int constant) 
+{
+	ValueNode n = new ValueNode;
+	n->name = "";
+	n->value = constant;
+	return n;
+}
+
+struct AssignmentStatement* parse_assign_stmt() 
 {
 	Token t;
 	AssignmentStatement* st = new AssignmentStatement;
@@ -126,7 +142,8 @@ struct StatementNode* parse_assign_stmt()
 		st->operand2 = NULL;
 	}
 	match(SEMICOLON);
-	return NULL;
+
+	return st;
 }
 
 struct StatementNode* parse_print_stmt() 
@@ -153,25 +170,28 @@ struct StatementNode* parse_stmt()
 {
 	// TODO: 
 	// stmt -> assign_stmt | print_stmt | while_stmt | if_stmt | switch_stmt 
+	StatementNode* st = new StatementNode;
 	Token t = peek();
 	if (t.token_type == ID) {
-		return parse_assign_stmt();
+		st->type = ASSIGN_STMT;
+		st->assign_stmt = parse_assign_stmt();
 	}	
-	if (t.token_type == PRINT) {
-		return parse_print_stmt();
+	else if (t.token_type == PRINT) {
+		st->type = PRINT_STMT;
+		st->print_stmt = parse_print_stmt();
 	}
-	if (t.token_type == WHILE) {
+	else if (t.token_type == WHILE) {
 		return parse_while_stmt();
 	} 
-	if (t.token_type == IF) {
+	else if (t.token_type == IF) {
 		return parse_if_stmt();
 	}
-	if (t.token_type == SWITCH) {
+	else if (t.token_type == SWITCH) {
 		return parse_switch_stmt();
 	} else {
 		syntax_error();
 	}
-	return NULL; 
+	return st; 
 }
 
 struct StatementNode* parse_stmt_list()
