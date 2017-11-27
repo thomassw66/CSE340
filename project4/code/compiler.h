@@ -49,7 +49,8 @@ struct PrintStatement
 enum ConditionalOperatorType {
     CONDITION_GREATER = 345,
     CONDITION_LESS,
-    CONDITION_NOTEQUAL
+    CONDITION_NOTEQUAL,
+    CONDITION_EQUAL
 };
 
 struct IfStatement

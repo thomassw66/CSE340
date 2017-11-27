@@ -1,0 +1,11 @@
+a, b, c;
+{
+FOR ( a = 0 ; a < 10 ; a = a + 1 ; )
+{
+FOR ( b = 1 ; b < 5 ; b = b + 2 ;)
+{
+print a ;
+}
+print b ;
+}
+}

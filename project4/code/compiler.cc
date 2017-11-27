@@ -17,7 +17,7 @@
 #include "ir_debug.h"
 #include "parser.h"
 
-#define DEBUG 1     // 1 => Turn ON debugging, 0 => Turn OFF debugging
+#define DEBUG 0     // 1 => Turn ON debugging, 0 => Turn OFF debugging
 
 void debug(const char* format, ...)
 {
@@ -210,6 +210,6 @@ int main()
         print_program(program);
         printf("\n-------------------------------------------\n");
     }
-    //execute_program(program);
+    execute_program(program);
     return 0;
 }
