@@ -20,6 +20,7 @@ LexicalAnalyzer lexer;
 map<string, ValueNode*> memory;
 
 
+struct StatementNode* parse_generate_intermediate_representation();
 struct StatementNode* parse_program();
 struct StatementNode* parse_stmt_list();
 struct StatementNode* parse_body();
@@ -328,41 +329,31 @@ struct StatementNode* parse_switch_stmt()
 	while (t.token_type == CASE) {
 		Token numTok;
 
-		match(CASE);
-		numTok = match(NUM);
-		match(COLON);
-
-
-		GotoStatement* goto_node = new GotoStatement;
-		goto_node->target = end;
-
-		StatementNode* goto_stmt = new StatementNode;
-		goto_stmt->type = GOTO_STMT;
-		goto_stmt->goto_stmt = goto_node;
-		goto_stmt->next = NULL;
-
-		StatementNode* body = parse_body();
-		get_last(body)->next = goto_stmt;
-
-		IfStatement* if_node = new IfStatement;
-		if_node->condition_operand1 = var_node;
-		if_node->condition_op = CONDITION_EQUAL;
-		if_node->condition_operand2 = make_value_node_constant(atoi(numTok.lexeme));
-		if_node->true_branch = body;
-		if_node->false_branch = NULL;
 
 		StatementNode* stmt = new StatementNode;
 		stmt->type = IF_STMT;
-		stmt->if_stmt = if_node; 
+		stmt->if_stmt = new IfStatement;
+		stmt->next = make_no_op(); // noop 
 
-		StatementNode* noop = make_no_op();
+		stmt->if_stmt->condition_operand1 = var_node;
+		stmt->if_stmt->condition_op = CONDITION_NOTEQUAL;
 
-		goto_stmt->next = noop;
-		if_node->false_branch = noop; 
-		stmt->next = noop; 
+		match(CASE);
+		stmt->if_stmt->condition_operand2 = make_value_node_constant(atoi(match(NUM).lexeme));
+		match(COLON);
+
+		stmt->if_stmt->false_branch = parse_body();
+		stmt->if_stmt->true_branch = stmt->next; // noop 
+
+		StatementNode* goto_stmt = new StatementNode;
+		goto_stmt->type = GOTO_STMT;
+		goto_stmt->goto_stmt = new GotoStatement;
+		goto_stmt->goto_stmt->target = end;
+		goto_stmt->next = stmt->next; // noop 
+		get_last(stmt->if_stmt->false_branch)->next = goto_stmt;
 
 		prev->next = stmt;
-		prev = noop;
+		prev = stmt->next;
 		
 		t = peek();
 	}
@@ -454,4 +445,8 @@ struct StatementNode* parse_program()
 	n1 = parse_body(); 	// program code graph generated in here
 
 	return n1; 	
+}
+
+struct StatementNode* parse_generate_intermediate_representation() {
+	return parse_program();
 }
