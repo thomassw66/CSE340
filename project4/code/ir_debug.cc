@@ -53,6 +53,7 @@ static void print_conditional_operator(ConditionalOperatorType op)
         case CONDITION_GREATER:  cout << " > ";  break;
         case CONDITION_LESS:     cout << " < ";  break;
         case CONDITION_NOTEQUAL: cout << " <> "; break;
+        case CONDITION_EQUAL:    cout << " == "; break;
         default:                 cout << " ? ";  break;
     }
 }

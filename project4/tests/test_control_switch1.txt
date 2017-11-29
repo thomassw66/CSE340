@@ -1,0 +1,10 @@
+a, b, c;
+{
+	b = 1;
+	a = 2; 
+	SWITCH a {
+	CASE 1: { c = 2*3; }
+	CASE 2: { c = 4*5; }
+	}
+	print c;
+}

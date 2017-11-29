@@ -165,6 +165,12 @@ void execute_program(struct StatementNode * program)
                         else
                             pc = pc->if_stmt->false_branch;
                         break;
+                    case CONDITION_EQUAL:
+                        if (op1 == op2) 
+                            pc = pc->if_stmt->true_branch;
+                        else 
+                            pc = pc->if_stmt->false_branch;
+                        break;
                     default:
                         debug("Error: invalid value for if_stmt->condition_op (%d).\n", pc->if_stmt->condition_op);
                         exit(1);

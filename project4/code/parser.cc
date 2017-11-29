@@ -21,33 +21,8 @@ map<string, ValueNode*> memory;
 
 
 struct StatementNode* parse_program();
-void parse_var_section();
-void parse_id_list();
 struct StatementNode* parse_stmt_list();
-struct StatementNode* parse_stmt();
 struct StatementNode* parse_body();
-struct AssignmentStatement* parse_assign_stmt();
-struct StatementNode* parse_expr();
-ValueNode* parse_primary(); // void for now 
-ArithmeticOperatorType parse_op();
-struct PrintStatement* parse_print_stmt();
-struct IfStatement* parse_while_stmt();
-struct IfStatement* parse_if_stmt();
-void parse_condition();
-ConditionalOperatorType parse_relop();
-struct StatementNode* parse_switch_stmt();
-struct StatementNode* parse_for_stmt();
-void parse_case_list(ValueNode* var, StatementNode* end);
-void parse_case();
-void parse_default_case();
-void error(string message);
-void syntax_error();
-ValueNode* get_value_node(string id);
-ValueNode* get_value_node(int constant);
-Token match(TokenType type);
-Token peek();
-ArithmeticOperatorType get_op(TokenType type);
-void declare_var(string id);
 
 void syntax_error() 
 {
@@ -161,7 +136,7 @@ ValueNode* get_value_node(string id)
 {
 	// should try not faking it
 	if (memory.find(id) == memory.end()) {
-		cout << "Error: identifier [" << id << " accessed but never declared" << endl;
+		cout << "Error: identifier [" << id << "] accessed but never declared" << endl;
 		exit(1);
 	}
 	return memory[id];
@@ -192,10 +167,14 @@ ValueNode* parse_primary() {
 	else syntax_error(); 
 }
 
-struct AssignmentStatement* parse_assign_stmt() 
+struct StatementNode* parse_assign_stmt() 
 {
 	Token t;
+	StatementNode* stmt = new StatementNode;
+	stmt->type = ASSIGN_STMT;
+
 	AssignmentStatement* st = new AssignmentStatement;
+	stmt->assign_stmt = st;
 	Token left = match(ID);
 	st->left_hand_side = get_value_node(left.lexeme);
 
@@ -216,148 +195,196 @@ struct AssignmentStatement* parse_assign_stmt()
 	}
 	match(SEMICOLON);
 
-	return st;
+	return stmt;
 }
 
-struct PrintStatement* parse_print_stmt() 
+struct StatementNode* parse_print_stmt() 
 {
+	StatementNode* stmt = new StatementNode;
+	stmt->type = PRINT_STMT;
+
 	PrintStatement* p = new PrintStatement;
+	stmt->print_stmt = p;
+
 	match(PRINT);
 	Token idTok = match(ID);
 	match(SEMICOLON);
 	p->id = get_value_node(idTok.lexeme);
-	return p;
+	
+	return stmt;
 }
 
-struct IfStatement* parse_while_stmt() 
+StatementNode* get_last(StatementNode* list) 
 {
-	IfStatement* while_stmt = new IfStatement;
+	while (list->next != NULL) list = list->next;
+	return list;
+}
+
+struct StatementNode* parse_while_stmt() 
+{
+	StatementNode* stmt_node = new StatementNode;
+	stmt_node->type = IF_STMT;
+	stmt_node->if_stmt = new IfStatement;
+	stmt_node->next = make_no_op();
+
 	match(WHILE);
-	while_stmt->condition_operand1 = parse_primary();
-	while_stmt->condition_op = parse_relop();
-	while_stmt->condition_operand2 = parse_primary();
-	while_stmt->true_branch = parse_body();
-	while_stmt->false_branch = NULL;
-	return while_stmt;
+	
+	stmt_node->if_stmt->condition_operand1 = parse_primary();
+	stmt_node->if_stmt->condition_op = parse_relop();
+	stmt_node->if_stmt->condition_operand2 = parse_primary();
+	stmt_node->if_stmt->true_branch = parse_body();
+	
+	StatementNode* goto_node = new StatementNode;
+	goto_node->type = GOTO_STMT;
+	goto_node->goto_stmt = new GotoStatement;
+	goto_node->goto_stmt->target = stmt_node;
+	goto_node->next = stmt_node->next;
+
+	//
+	stmt_node->if_stmt->false_branch = stmt_node->next;
+	get_last(stmt_node->if_stmt->true_branch)->next = goto_node;
+
+	return stmt_node;
 }
 
-struct IfStatement* parse_if_stmt() 
+struct StatementNode* parse_if_stmt() 
 {
-	IfStatement* if_node = new IfStatement;
+	StatementNode* stmt_node = new StatementNode;
+	stmt_node->type = IF_STMT;
+	stmt_node->if_stmt = new IfStatement;
+	stmt_node->next = make_no_op();
+
 	match(IF);
-	if_node->condition_operand1 = parse_primary();
-	if_node->condition_op = parse_relop();
-	if_node->condition_operand2 = parse_primary();
-	if_node->true_branch = parse_body();
-	if_node->false_branch = NULL; // for now 
-	return if_node;
+
+	stmt_node->if_stmt->condition_operand1 = parse_primary();
+	stmt_node->if_stmt->condition_op = parse_relop();
+	stmt_node->if_stmt->condition_operand2 = parse_primary();
+	stmt_node->if_stmt->true_branch = parse_body();
+
+	// handle branching 
+	stmt_node->if_stmt->false_branch = stmt_node->next; 
+	get_last(stmt_node->if_stmt->true_branch)->next = stmt_node->next;
+	
+	return stmt_node;
 }
 
-void parse_case_list(ValueNode* var, StatementNode* end) 
+struct StatementNode* parse_for_stmt()
 {
-	// should return the switch stmt subgraph
-	// if var == c1 {  ....; goto end; }
-	// if var == c2 { ...; goto end; }
-	// end:
-	Token t = peek();
-	while (t.token_type == CASE) {
-		Token numTok;
-		StatementNode* body;
 
-		match(CASE);
-		numTok = match(NUM);
-		match(COLON);
-		body = parse_body();
 
-		IfStatement* if_node = new IfStatement;
-		if_node->condition_operand1 = var;
-		if_node->condition_op = CONDITION_EQUAL;
-		if_node->condition_operand2 = get_value_node(numTok.lexeme)
-		if_node->true_branch = body;
-		if_node->false_branch = NULL;
+	StatementNode* if_node = new StatementNode;
+	if_node->type = IF_STMT;
+	if_node->next = make_no_op();
 
-	}
-	t = peek();
-	if (t.token_type == DEFAULT) {
-		StatementNode* body;
+	if_node->if_stmt = new IfStatement;
+	if_node->if_stmt->false_branch = if_node->next; // noop 
 
-		match(DEFAULT);
-		match(COLON);
-		body = parse_body();
-	}
+	match(FOR);
+	match(LPAREN);
+	// e.g. a = 1; 
+	StatementNode* assign1 = parse_assign_stmt();
+	// a < 10 
+	if_node->if_stmt->condition_operand1 = parse_primary();
+	if_node->if_stmt->condition_op = parse_relop();
+	if_node->if_stmt->condition_operand2 = parse_primary();
+	match(SEMICOLON);
+	// a = a + 1; 
+	StatementNode* assign2 = parse_assign_stmt();
+	match(RPAREN);
+	match(LBRACE);
+	if_node->if_stmt->true_branch = parse_stmt_list();
+	match(RBRACE);
+
+	// GOTO loop 
+	assign2->next = new StatementNode;
+	assign2->next->type = GOTO_STMT;
+	assign2->next->next = if_node->next; // noop 
+	assign2->next->goto_stmt = new GotoStatement;
+	assign2->next->goto_stmt->target = if_node; // loop
+
+	// app/end assignment + goto node to the end of the if true branch
+	get_last(if_node->if_stmt->true_branch)->next = assign2;
+
+	assign1->next = if_node;
+	return assign1;
 }
 
 struct StatementNode* parse_switch_stmt() 
 {
+	Token t, varTok;
 	ValueNode* var_node;
+	StatementNode* begin = make_no_op(); 
 	StatementNode* end = make_no_op();
+
 	match(SWITCH);
-	Token varTok = match(ID);
+	varTok = match(ID);
 	var_node = get_value_node(varTok.lexeme);
 	match(LBRACE);
-	parse_case_list(var_node, end);
+	// ================- CASE LIST -====================
+	//parse_case_list(var_node, end);
+	StatementNode* prev = begin; 
+
+	t = peek();
+	while (t.token_type == CASE) {
+		Token numTok;
+
+		match(CASE);
+		numTok = match(NUM);
+		match(COLON);
+
+
+		GotoStatement* goto_node = new GotoStatement;
+		goto_node->target = end;
+
+		StatementNode* goto_stmt = new StatementNode;
+		goto_stmt->type = GOTO_STMT;
+		goto_stmt->goto_stmt = goto_node;
+		goto_stmt->next = NULL;
+
+		StatementNode* body = parse_body();
+		get_last(body)->next = goto_stmt;
+
+		IfStatement* if_node = new IfStatement;
+		if_node->condition_operand1 = var_node;
+		if_node->condition_op = CONDITION_EQUAL;
+		if_node->condition_operand2 = make_value_node_constant(atoi(numTok.lexeme));
+		if_node->true_branch = body;
+		if_node->false_branch = NULL;
+
+		StatementNode* stmt = new StatementNode;
+		stmt->type = IF_STMT;
+		stmt->if_stmt = if_node; 
+
+		StatementNode* noop = make_no_op();
+
+		goto_stmt->next = noop;
+		if_node->false_branch = noop; 
+		stmt->next = noop; 
+
+		prev->next = stmt;
+		prev = noop;
+		
+		t = peek();
+	}
+
+	// ============== DEFAULT ==========================
+	t = peek();
+	if (t.token_type == DEFAULT) {
+		match(DEFAULT);
+		match(COLON);
+		StatementNode* body = parse_body();
+		StatementNode* noop = make_no_op();
+
+		prev->next = body; 
+		get_last(body)->next = end; 
+		prev = noop; 
+
+		t = peek();
+	}
+	prev->next = end; 
+	// =============== CASE LIST END =================== 
 	match(RBRACE);
-}
-
-struct StatementNode* parse_stmt() 
-{
-// 	// TODO: 
-// 	// stmt -> assign_stmt | print_stmt | while_stmt | if_stmt | switch_stmt 
-	StatementNode* st = new StatementNode;
-// 	st->next = NULL;
-// 	Token t = peek();
-// 	if (t.token_type == ID) {
-// 		st->type = ASSIGN_STMT;
-// 		st->assign_stmt = parse_assign_stmt();
-// 	}	
-// 	else if (t.token_type == PRINT) {
-// 		st->type = PRINT_STMT;
-// 		st->print_stmt = parse_print_stmt();
-// 	}
-// 	else if (t.token_type == WHILE) {
-// 		st->type = IF_STMT;
-// 		st->if_stmt = parse_while_stmt();
-// 	} 
-// 	else if (t.token_type == IF) {
-// 		st->type = IF_STMT;
-// 		st->if_stmt = parse_if_stmt();
-// 	}
-// 	else if (t.token_type == SWITCH) {
-// 		// st
-// 		parse_switch_stmt();
-// 	} else {
-// 		syntax_error();
-// 	}
-	return st; 
-}
-
-void tail_if_stmt (StatementNode* node, StatementNode* tail) 
-{
-	StatementNode* noop = make_no_op();
-	noop->next = tail;
-	node->next = noop;
-	node->if_stmt->false_branch = noop;
-
-	StatementNode* tmp = node->if_stmt->true_branch;
-	while (tmp->next != NULL) tmp = tmp->next;
-	tmp->next = noop;
-}
-
-void tail_while_stmt(StatementNode* node, StatementNode* tail)
-{
-	StatementNode* noop = make_no_op();
-	noop->next = tail;
-	node->next = noop; 
-	node->if_stmt->false_branch = noop;
-
-	StatementNode* goto_node = new StatementNode;
-	goto_node->type = GOTO_STMT;
-	goto_node->goto_stmt = new GotoStatement;
-	goto_node->goto_stmt->target = node;
-
-	StatementNode* tmp = node->if_stmt->true_branch;
-	while(tmp->next != NULL) tmp = tmp->next;
-	tmp->next = goto_node;
+	return begin->next;
 }
 
 struct StatementNode* parse_stmt_list()
@@ -369,25 +396,24 @@ struct StatementNode* parse_stmt_list()
 	t1 = peek();
 	st = new StatementNode;
 	if (t1.token_type == ID) {
-		st->type = ASSIGN_STMT;
-		st->assign_stmt = parse_assign_stmt();
+		st = parse_assign_stmt();
 	}	
 	else if (t1.token_type == PRINT) {
-		st->type = PRINT_STMT;
-		st->print_stmt = parse_print_stmt();
+		st = parse_print_stmt();
 	}
 	else if (t1.token_type == WHILE) {
-		st->type = IF_STMT;
-		st->if_stmt = parse_while_stmt();
+		st = parse_while_stmt();
 	} 
 	else if (t1.token_type == IF) {
-		st->type = IF_STMT;
-		st->if_stmt = parse_if_stmt();
+		st = parse_if_stmt();
 	}
 	else if (t1.token_type == SWITCH) {
-		// st
-		parse_switch_stmt();
-	} else {
+		st = parse_switch_stmt();
+	} 
+	else if (t1.token_type == FOR) {
+		st = parse_for_stmt();
+	} 
+	else {
 		syntax_error();
 	}
 
@@ -402,19 +428,8 @@ struct StatementNode* parse_stmt_list()
 		stl = NULL;
 	}
 
-	if (t1.token_type == IF) {
-		tail_if_stmt(st, stl);
-	} 
-	else if (t1.token_type == WHILE) {
-		tail_while_stmt(st, stl);
-	}
-	// else if (t1.token_type == SWITCH) {}
-	else {
-		// st -> stl 
-		st->next = stl;
-	}
-	
-	// generate statement list subgraph from a statement and preceding statement list graph
+	// we append the proceeding statement list to the END of the parsed statement regardless of type of NULL
+	get_last(st)->next = stl;
 	
 	return st; // such code! very return! yay! 
 }

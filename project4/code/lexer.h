@@ -14,7 +14,7 @@
 // ------- token types -------------------
 
 typedef enum { END_OF_FILE = 0,
-    VAR, IF, WHILE, SWITCH, CASE, DEFAULT, PRINT, ARRAY,
+    VAR, IF, WHILE, SWITCH, CASE, DEFAULT, PRINT, ARRAY, FOR,
     PLUS, MINUS, DIV, MULT,
     EQUAL, COLON, COMMA, SEMICOLON,
     LBRAC, RBRAC, LPAREN, RPAREN, LBRACE, RBRACE,
