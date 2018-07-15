@@ -15,7 +15,7 @@
 using namespace std;
 
 string reserved[] = { "END_OF_FILE",
-    "VAR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "PRINT", "ARRAY",
+    "VAR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "PRINT", "ARRAY", "FOR",
     "PLUS", "MINUS", "DIV", "MULT",
     "EQUAL", "COLON", "COMMA", "SEMICOLON",
     "LBRAC", "RBRAC", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
@@ -23,8 +23,8 @@ string reserved[] = { "END_OF_FILE",
     "NUM", "ID", "ERROR"
 };
 
-#define KEYWORDS_COUNT 8
-string keyword[] = { "VAR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "print", "ARRAY" };
+#define KEYWORDS_COUNT 9
+string keyword[] = { "VAR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "print", "ARRAY", "FOR" };
 
 void Token::Print()
 {

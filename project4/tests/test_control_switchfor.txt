@@ -1,0 +1,23 @@
+a, b, c, d;
+{
+	b=1;
+	a = 2;
+	SWITCH a {
+		CASE 2: {
+			c = 2*3;
+		}
+		CASE 3: {
+			c = 4*5;
+		}
+		DEFAULT: {
+			print b; 
+			c = 100;
+		}
+	}
+
+	FOR (b = 1; b < 5; b = b + 1;) {
+		d = 2*b;
+		print d;
+	}
+	print c;
+}
