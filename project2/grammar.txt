@@ -1,0 +1,45 @@
+program -> scope #
+scope -> LBRACE scope_list RBRACE #
+scope_list -> stmt #
+scope_list -> declaration #
+scope_list -> scope #
+scope_list -> stmt scope_list #
+scope_list -> declaration scope_list #
+scope_list -> scope scope_list #
+declaration -> type_decl #
+declaration -> var_decl #
+type_decl -> TYPE id_list COLON type_name SEMICOLON #
+type_name -> REAL #
+type_name -> INT #
+type_name -> BOOLEAN #
+type_name -> STRING #
+type_name -> LONG #
+type_name -> ID #
+var_decl -> VAR id_list COLON type_name SEMICOLON #
+id_list -> ID #
+id_list -> ID COMMA id_list #
+stmt_list -> stmt #
+stmt_list -> stmt stmt_list #
+stmt -> assign_stmt #
+stmt -> while_stmt #
+assign_stmt -> ID EQUAL expr SEMICOLON #
+while_stmt -> WHILE condition LBRACE stmt_list RBRACE #
+expr -> term #
+expr -> term PLUS expr #
+term -> factor #
+term -> factor MULT term #
+factor -> LPAREN expr RPAREN #
+factor -> NUM #
+factor -> REALNUM #
+factor -> ID #
+condition -> ID #
+condition -> primary relop primary #
+primary -> ID #
+primary -> NUM #
+primary -> REALNUM #
+relop -> GREATER #
+relop -> GTEQ #
+relop -> LESS #
+relop -> NOTEQUAL #
+relop -> LTEQ #
+##

@@ -12,16 +12,25 @@
 using namespace std;
 
 void parseRuleList();
-Rule parseRule();
+Rule * parseRule();
 void parseIDList();
-vector<Symbol> parseRightHandSide();
+vector<string> parseRightHandSide();
 void parseID();
 void parseArrow();
 
 LexicalAnalyzer lexer;
 Token token;
 
-vector<Rule> rules;
+vector<Rule*> rules;
+
+static string reserved[] = { "END_OF_FILE", "ARROW", "HASH", "DOUBLEHASH", "ID", "ERROR" };
+
+void print_set(set<string> * s) {
+    cout << "{ ";
+    for (string member : *s)
+        cout << member << " ";
+    cout << "}" << endl;
+}
 
 void getToken()
 {
@@ -34,36 +43,43 @@ void error(string message)
     exit(0);
 }
 
-string matchToken(TokenType type, string message) 
+Token matchToken(TokenType type, string message) 
 {
-    string ret = token.lexeme;
-    if (token.token_type == type) getToken();
-    else error(message);
+    Token ret = token;
+    if (token.token_type != type) {
+        cout << "expected: " << reserved[(int) type] << endl;
+        cout << "read: " << reserved[(int) token.token_type] << endl;
+        cout << "at line # " << token.line_no << endl;
+        error(message);
+
+    }
+    getToken();
     return ret;
 }
 
 void parseRuleList() 
 {
-    Rule r = parseRule();
+    Rule * r = parseRule();
     rules.push_back(r);
     if (token.token_type != DOUBLEHASH) 
         parseRuleList();
 }
 
-Rule parseRule() 
+Rule * parseRule() 
 {
-    Rule r;
-    r.lhs = matchToken(ID, "expected ID");
-    matchToken(ARROW, "expected ARROR");
-    r.rhs = parseRightHandSide();
-    return r;
+    Token t = matchToken(ID, "expected ID");
+    string lhs = t.lexeme;
+    matchToken(ARROW, "expected ARROW");
+    vector<string> rhs = parseRightHandSide();
+    return new Rule(lhs, rhs);
 }
 
-vector<Symbol> parseRightHandSide() 
+vector<string> parseRightHandSide() 
 {
-    vector<Symbol> symbols;
+    vector<string> symbols;
     while (token.token_type != HASH) {
-        Symbol id = matchToken(ID, "expected ID");
+        Token t = matchToken(ID, "expected ID");
+        string id = t.lexeme;
         symbols.push_back(id);
     }
     matchToken(HASH, "expected HASH");
@@ -75,6 +91,9 @@ vector<Symbol> parseRightHandSide()
 int main (int argc, char* argv[])
 {
     int task;
+    vector<string> * nonTerminals;
+    vector<string> * terminals;
+    set<string> * generating; 
 
     if (argc < 2)
     {
@@ -92,10 +111,10 @@ int main (int argc, char* argv[])
     // TODO: Read the input grammar at this point from standard input
     getToken();
     parseRuleList();
-    // for (Rule r : rules) {
-    //     print_rule(r);;
+    // for (Rule * r : rules) {
+    //     r->print();
     // }
-    Grammar g (rules);
+    Grammar * g = new Grammar (rules);
     /*
        Hint: You can modify and use the lexer from previous project
        to read the input. Note that there are only 4 token types needed
@@ -108,30 +127,59 @@ int main (int argc, char* argv[])
 
     switch (task) {
         case 1:
-            // TODO: perform task 1.
-            g.ListTerminals();
-            g.ListNonTerminals();
+            // Print nonTerminals
+            nonTerminals = g->getNonTerminals();
+            // TODO: sort ?
+            for (string nt : *nonTerminals) {
+                cout << nt << endl;
+            }
             cout << endl;
-            break;
+            // Print terminals
+            terminals = g->getTerminals();
+            // TODO: sort ?
+            for (string t : *terminals) {
+                cout << t << endl;
+            }
+            cout << endl;
 
+            delete nonTerminals;
+            delete terminals; 
+
+            break;
         case 2:
             // TODO: perform task 2.
-            g.GetUsefulRules();
+            generating = g->getGeneratingSymbols();
+            print_set(generating);
             break;
-
         case 3:
             // TODO: perform task 3.
-            g.ListFirstSet();
+            // g->ListFirstSet();
+            cout << "Task 3" << endl;;
+            nonTerminals = g->getNonTerminals();
+            cout << nonTerminals->size() << endl;
+            for (string nt : *nonTerminals) {
+                cout << "FIRST(" << nt<<") = " << endl;
+                set<string> * firstSet = g->getFirstSet(nt);
+                print_set(firstSet);
+            }
+            delete nonTerminals;
             break;
 
         case 4:
             // TODO: perform task 4.
-            g.ListFollowSet();
+            nonTerminals = g->getNonTerminals();
+            // g->ListFollowSet();
+            for (string nt : *nonTerminals) {
+                cout << "FOLLOW(" << nt << ") = " << endl;
+                set<string> * followSet = g->getFollowSet(nt);
+                print_set(followSet);
+            }
+            delete nonTerminals;
             break;
 
         case 5:
             // TODO: perform task 5.
-            g.HasPredictiveParser();
+            // g->HasPredictiveParser();
             break;
 
         default:

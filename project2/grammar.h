@@ -2,62 +2,62 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
+#include "rule.h"
 
-typedef std::string Symbol;
+using namespace std;
 
-struct Rule {
-	Symbol lhs;
-	std::vector<Symbol> rhs;
-	int order;
-};
+// typedef std::string Symbol;
 
-struct Symbol_Info {
+class Symbol {
 	bool is_terminal;
 	bool is_generating;
 	bool is_reachable;
-	Symbol id;
-	int order;
-};
+	string name;
+	set<Symbol*> first;
+	set<Symbol*> follow;
 
-struct Rule_Key {
-	inline bool operator() (const Rule& rule1, const Rule& rule2) {
-		return (rule1.order < rule2.order);
-	}
-};
-
-struct Symbol_Info_Key {
-	inline bool operator() (const Symbol_Info& info1, const Symbol_Info& info2) {
-		return (info1.order < info2.order);
+public: 
+	Symbol(string id) {
+		// this->is_terminal = true;
+		// this->is_generating = false;
+		// this->is_reachable = false;
+		this->name = id;
+		// this->first = new std::set<Symbol*>();
+		// this->follow = new std::set<Symbol*>();
 	}
 };
 
 class Grammar {
+	vector<Rule*> rule_list;
+	set<string> universe;
+	// map<string, Symbol*> universe;
+
 public:
-	void ListFirstSet();
-	void ListFollowSet();
-	void GetUsefulRules();
-	bool HasPredictiveParser();
-	void ListTerminals();
-	void ListNonTerminals();
-	Grammar(std::vector<Rule> rule_list);
+	Grammar(vector<Rule*> rules);
+
+	// TERMINALS & NONTERMINALS
+	vector<string> * getNonTerminals();
+	vector<string> * getTerminals();
+	// FIRST & FOLLOW
+	set<string> * getFirstSet(string id); 
+	set<string> * getFollowSet(string id); 
+	
+	set<string> * getGeneratingSymbols();
+	set<string> * getReachableSymbols();
+
 private:
 	// implementation specific details 
-	std::map<Symbol, std::vector<Rule > > rule_list;
-	std::map<Symbol, Symbol_Info> universe;
-	std::map<Symbol, std::set<Symbol> > first;
-	std::map<Symbol, std::set<Symbol> > follow;
 	// vector<Symbol> universe;
-	void AddRule(Rule r);
-	void AddSymbol(Symbol id, bool is_terminal);
-	void UpdateSymbol(Symbol id, bool is_terminal);
-	void calculate_reachable_symbols();
-	void calculate_generating_symbols();
-	void calculate_first_sets();
-	void calculate_follow_sets();
-	void set_reachable(Symbol id);
-	int id_counter;
-	int rule_counter;
-	Symbol start_symbol;
+	void addRule(Rule *r);
+	void addSymbol(string id);
+	bool isTerminal(string id);
+
+	void calculateReachableSymbols() {}
+	void calculateGeneratingSymbols() {}
+	void calculateFirstSets() {}
+	void calculateFollowSets() {}
+	string startSymbol;
 };
 
 void print_rule(Rule r);

@@ -60,7 +60,7 @@ Token LexicalAnalyzer::ScanId()
 
     if (isalpha(c)) {
         tmp.lexeme = "";
-        while (!input.EndOfInput() && isalnum(c)) {
+        while (!input.EndOfInput() && (isalnum(c) || c == '_') ) {
             tmp.lexeme += c;
             input.GetChar(c);
         }
